@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Model files and checkpoints
+model/*.pkl
+model/*.joblib
+*.h5
+*.ckpt
+
+# VS Code settings
+.vscode/
+
+# Logs
+*.log
+*.exe
+# Data files
+
+data/*.tsv
+data/*.json
+
+# Temporary files
+*.tmp
+*.swp
+
+# Pytest cache
+.pytest_cache/
+
+# macOS & Windows
+.DS_Store
+Thumbs.db
