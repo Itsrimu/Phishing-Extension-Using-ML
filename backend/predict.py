@@ -1,49 +1,73 @@
-# File: backend/predict.py
-
 import pickle
+import logging
 from pathlib import Path
 from feature import extract_url_features
-from train_model import update_model_with_feedback
 
-# Paths
+# Enable logging for debugging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+# Path to the saved model pipeline
 MODEL_PATH = Path("model/phishing_model1.pkl")
-VECTORIZER_PATH = Path("model/vectorizer1.pkl")
 
-# Load model and vectorizer
-def load_model_and_vectorizer():
-    with open(MODEL_PATH, "rb") as f:
-        model = pickle.load(f)
-    with open(VECTORIZER_PATH, "rb") as f:
-        vectorizer = pickle.load(f)
-    return model, vectorizer
-
-# Predict if URL is phishing or legitimate
-def predict_url(url: str):
-    model, vectorizer = load_model_and_vectorizer()
-    features = extract_url_features(url)
-    features_vectorized = vectorizer.transform([features])
-    prediction = model.predict(features_vectorized)[0]
-    label = "bad" if prediction == 1 else "good"
-    return label
-
-# Update model with user feedback
-def update_model(url: str, feedback: str):
+def load_model():
+    """
+    Load the saved machine learning model pipeline.
+    """
     try:
-        update_model_with_feedback(url, feedback)
-        print("Model updated with feedback.")
+        with open(MODEL_PATH, "rb") as file:
+            model = pickle.load(file)
+        logging.info(" Model loaded successfully.")
+        return model
+    except FileNotFoundError:
+        logging.error(f" Model file missing: {MODEL_PATH}")
+        raise FileNotFoundError(f"Model not found at path: {MODEL_PATH}")
     except Exception as e:
-        print(" Failed to update model:", e)
+        logging.error(f" Error loading model: {e}")
+        raise Exception(f"Error loading model: {e}")
 
-# Example usage
+def predict_url(url: str) -> dict:
+    """
+    Predict whether the URL is phishing or legitimate.
+
+    Args:
+        url (str): The URL to be analyzed.
+
+    Returns:
+        dict: Contains prediction label and confidence score.
+    """
+    try:
+        logging.info(f" Extracting features for URL: {url}")
+        features = extract_url_features(url)
+
+        if not isinstance(features, dict) or not features:
+            logging.error(" Feature extraction failed or returned an empty dictionary.")
+            raise ValueError("Feature extraction failed or returned invalid data.")
+
+        model = load_model()
+
+        # Ensure model receives valid input format
+        model_input = {k: v for k, v in features.items() if isinstance(v, (int, float, bool))}
+
+        prediction_proba = model.predict_proba([model_input])[0]
+        prediction = model.predict([model_input])[0]
+
+        confidence = round(max(prediction_proba) * 100, 2)
+        label = "Phishing" if prediction == 1 else "Legitimate"
+
+        logging.info(f" Prediction: {label} ({confidence}% confidence)")
+
+        return {"url": url, "verdict": label, "confidence_score": f"{confidence}%"}
+
+    except Exception as e:
+        logging.error(f" Prediction failed for {url}: {e}")
+        raise Exception(f"Prediction failed: {e}")
+
 if __name__ == "__main__":
-    url = input("🔗 Enter a URL to check: ")
-    prediction = predict_url(url)
-    print(f"Prediction: {prediction.upper()}")
-
-    feedback = input(" Was this correct? (yes/no): ").strip().lower()
-    if feedback == "no":
-        correct_label = input(" Then what should it be? (good/bad): ").strip().lower()
-        if correct_label in ["good", "bad"]:
-            update_model(url, correct_label)
-        else:
-            print("⚠ Invalid feedback. Must be 'good' or 'bad'.")
+    test_url = input("Enter a URL to check: ").strip()
+    try:
+        result = predict_url(test_url)
+        print(f"\n URL Analysis Result:")
+        print(f" Confidence Score: {result['confidence_score']}")
+        print(f" Verdict: {result['verdict']}")
+    except Exception as err:
+        print(f" Error: {err}")

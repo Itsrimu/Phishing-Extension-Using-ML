@@ -1,95 +1,139 @@
-# File: backend/features.py
+# File: feature.py
 
 import re
-from urllib.parse import urlparse
+import socket
+import ssl
+import whois
+import ipaddress
+import datetime
+import tldextract
+from urllib.parse import urlparse, unquote
 
+# Suspicious terms often used in phishing
+SUSPICIOUS_KEYWORDS = [
+    'login', 'verify', 'secure', 'account', 'update', 'signin', 'banking',
+    'confirm', 'validate', 'reset', 'submit'
+]
 
-def is_ip(domain: str) -> bool:
-    """
-    Check if the domain is an IP address.
-    """
-    return bool(re.match(r"^(?:\d{1,3}\.){3}\d{1,3}$", domain))
+# Common suspicious TLDs
+SUSPICIOUS_TLDS = {'tk', 'ml', 'ga', 'cf', 'gq'}
 
+# Common URL shorteners
+URL_SHORTENERS = {'bit.ly', 'goo.gl', 't.co', 'tinyurl.com', 'is.gd', 'ow.ly'}
 
-def count_https_token(url: str) -> int:
-    """
-    Count how many times 'https' appears in the URL (misleading tactic).
-    """
-    return url.count('https')
+def extract_domain(url):
+    ext = tldextract.extract(url)
+    return f"{ext.domain}.{ext.suffix}"
 
+def is_ip_address(domain):
+    try:
+        ipaddress.ip_address(domain)
+        return True
+    except ValueError:
+        return False
+
+def is_private_ip(domain):
+    try:
+        ip = ipaddress.ip_address(domain)
+        return ip.is_private
+    except:
+        return False
+
+def get_domain_age(domain):
+    try:
+        w = whois.whois(domain)
+        creation = w.creation_date
+        if isinstance(creation, list):
+            creation = creation[0]
+        age = (datetime.datetime.now() - creation).days
+        return age
+    except:
+        return -1
+
+def validate_ssl(domain):
+    try:
+        ctx = ssl.create_default_context()
+        with ctx.wrap_socket(socket.socket(), server_hostname=domain) as s:
+            s.settimeout(3)
+            s.connect((domain, 443))
+            cert = s.getpeercert()
+            expire_date = datetime.datetime.strptime(cert['notAfter'], '%b %d %H:%M:%S %Y %Z')
+            issue_date = datetime.datetime.strptime(cert['notBefore'], '%b %d %H:%M:%S %Y %Z')
+            issuer = cert['issuer'][0][0][1]
+            cn = cert['subject'][0][0][1]
+            return {
+                "valid_ssl_cert": expire_date > datetime.datetime.now(),
+                "ssl_cert_age_days": (datetime.datetime.now() - issue_date).days,
+                "ssl_cert_issuer": issuer,
+                "ssl_matches_domain": domain in cn
+            }
+    except:
+        return {
+            "valid_ssl_cert": False,
+            "ssl_cert_age_days": -1,
+            "ssl_cert_issuer": "Unknown",
+            "ssl_matches_domain": False
+        }
 
 def extract_url_features(url: str) -> dict:
-    """
-    Extracts a comprehensive set of features from a URL.
-    Returns:
-        dict: Feature name -> value
-    """
-    if not isinstance(url, str) or not url.strip():
-        raise ValueError("Invalid URL")
+    parsed = urlparse(url)
+    domain  = extract_domain(url)
+    netloc  = parsed.netloc.split('@')[-1].split(':')[0]
+    is_ip   = is_ip_address(netloc)
 
-    url = url.strip().lower()
-
-    # Add try-except block to catch invalid URLs
-    try:
-        # Ensure the URL starts with http:// or https://
-        parsed = urlparse(url if url.startswith(('http://', 'https://')) else f"http://{url}")
-    except ValueError as e:
-        # Log the invalid URL or handle as needed
-        print(f"Invalid URL format: {url}")
-        return {}
-
-    domain = parsed.netloc
-    path = parsed.path
-    query = parsed.query
-    full = f"{domain}{path}?{query}"
-
-    suspicious_keywords = [
-        "secure", "account", "update", "login", "signin", "banking", "confirm", "password",
-        "ebay", "paypal", "dropbox", "admin", "submit", "wp-admin", "webscr", "verify"
-    ]
-
-    trusted_keywords = [
-        "gov", ".gov", ".edu", "who.int", "nasa.gov", "india.gov.in", "europa.eu"
-    ]
-
-    features = {
-        # Basic structure
-        "url_length": len(url),
-        "domain_length": len(domain),
-        "path_length": len(path),
-        "query_length": len(query),
-        "num_dots": full.count('.'),
-        "num_hyphens": full.count('-'),
-        "num_underscores": full.count('_'),
-        "num_slashes": full.count('/'),
-        "num_digits": sum(c.isdigit() for c in full),
-        "num_letters": sum(c.isalpha() for c in full),
-        "ratio_digits": sum(c.isdigit() for c in full) / len(full) if full else 0,
-        "ratio_letters": sum(c.isalpha() for c in full) / len(full) if full else 0,
-
-        # Components
-        "has_https": int(url.startswith("https")),
-        "count_https_token": count_https_token(url),
-        "has_ip": int(is_ip(domain)),
-        "has_at_symbol": int("@" in url),
-        "has_port": int(":" in domain and not domain.endswith(':')),
-        "has_query": int(bool(query)),
-        "has_equals": int("=" in query),
-        "has_double_slash": int('//' in url[8:]),  # beyond protocol
-        "num_subdomains": domain.count('.') - 1 if domain else 0,
-
-        # Suspicious keyword presence
-        "suspicious_keywords_count": sum(word in url for word in suspicious_keywords),
-        "has_suspicious_keyword": int(any(word in url for word in suspicious_keywords)),
-
-        # TLD related
-        "tld_length": len(domain.split('.')[-1]) if '.' in domain else 0,
-        "is_tld_suspicious": int(domain.endswith('.xyz') or domain.endswith('.tk') or domain.endswith('.cf')),
-
-        # Trusted domain indicators
-        "is_trusted_domain": int(any(trusted in domain for trusted in trusted_keywords)),
-        "domain_is_short": int(len(domain) < 15),
-        "is_https_and_trusted": int(url.startswith("https") and any(t in domain for t in trusted_keywords)),
+    ssl_feats = validate_ssl(domain) if parsed.scheme == 'https' else {
+        "valid_ssl_cert": False,
+        "ssl_cert_age_days": -1,
+        "ssl_cert_issuer": "None",
+        "ssl_matches_domain": False
     }
 
-    return features
+    feats = {
+        "url": url,
+        "uses_ip_address": is_ip,
+        "is_private_ip": is_private_ip(netloc) if is_ip else False,
+        "domain": domain,
+        "domain_age_days": get_domain_age(domain),
+        "https_enabled": parsed.scheme == 'https',
+        "has_suspicious_keywords": any(w in unquote(url).lower() for w in SUSPICIOUS_KEYWORDS),
+        "url_length": len(url),
+        "has_hex_encoding": bool(re.search(r'%[0-9a-fA-F]{2}', url)),
+        "has_at_symbol": '@' in url,
+        "has_double_slash_path": '//' in parsed.path.lstrip('/'),
+        "subdomain_count": netloc.count('.') - 1,
+        "tld_in_suspicious_list": domain.split('.')[-1] in SUSPICIOUS_TLDS,
+        "shortened_url": domain in URL_SHORTENERS,
+        "contains_port": ':' in parsed.netloc,
+        "domain_in_whitelist": False,  # Placeholder
+        "ai_confidence_score": -1.0,   # Placeholder
+        **ssl_feats
+    }
+
+    # Add feature aliases expected by the model
+    feats.update({
+        "has_ip": feats["uses_ip_address"],
+        "ip_is_private": feats["is_private_ip"],
+        "has_suspicious_keyword": feats["has_suspicious_keywords"],
+        "is_tld_suspicious": feats["tld_in_suspicious_list"],
+        "count_https_token": feats["url"].count("https"),
+        "has_double_slash": feats["has_double_slash_path"],
+        "has_https": feats["https_enabled"],
+        "domain_is_short": len(domain) <= 5,
+        "ssl_valid": int(feats["valid_ssl_cert"]),
+    })
+
+    # Optional flag reason
+    if feats["has_suspicious_keywords"] and feats["domain_age_days"] != -1 and feats["domain_age_days"] < 30:
+        feats["flag_reason"] = "Suspicious keywords + new domain"
+    elif feats["uses_ip_address"] and not feats["is_private_ip"]:
+        feats["flag_reason"] = "Public IP used as domain"
+    elif feats["shortened_url"]:
+        feats["flag_reason"] = "Shortened URL"
+    elif feats["has_at_symbol"]:
+        feats["flag_reason"] = "Obfuscated with '@'"
+    elif not feats["https_enabled"]:
+        feats["flag_reason"] = "Not using HTTPS"
+    else:
+        feats["flag_reason"] = ""
+
+    return feats

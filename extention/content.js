@@ -1,28 +1,47 @@
 // Log that the content script is loaded
-console.log("Phishing Detection content script loaded");
+console.log(" Phishing Detection content script loaded");
 
-// Function to send the URL of the page to the background script
+// Function to send the current page URL to the background script
 function sendPageUrl() {
   const currentUrl = window.location.href;
 
-  // Send the URL to the background script for prediction
+  // Send a message to background script to check this URL
   chrome.runtime.sendMessage({ action: 'check_url', url: currentUrl }, function (response) {
-    console.log('Phishing Check Response:', response);
+    console.log(' Phishing Check Response:', response);
   });
 }
 
-// Call the function to send the page URL
+// Send page URL on load
 sendPageUrl();
 
-// Add an event listener for user feedback (e.g., a button click on the page)
+// Listen for user feedback button clicks on the page itself
 document.addEventListener('click', function (event) {
-  if (event.target && event.target.matches('.feedback-btn')) {
-    const feedback = event.target.dataset.feedback; // Assuming button has data-feedback attribute
+  const target = event.target;
+
+  if (target && target.matches('.feedback-btn')) {
+    const feedback = target.dataset.feedback; // Requires: data-feedback="correct"/"incorrect"
     const currentUrl = window.location.href;
-    
-    // Send feedback to the background script (for storage or processing)
-    chrome.runtime.sendMessage({ action: 'store_feedback', url: currentUrl, feedback: feedback }, function (response) {
-      console.log('Feedback sent:', response);
-    });
+
+    // Send feedback to background script
+    chrome.runtime.sendMessage(
+      {
+        action: 'store_feedback',
+        url: currentUrl,
+        feedback: feedback
+      },
+      function (response) {
+        console.log(' Feedback sent:', response);
+      }
+    );
+  }
+});
+
+// Listen for messages from the background script to show alerts or take further actions
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'show_alert') {
+    // Show a phishing warning if the site is detected as phishing
+    if (message.isPhishing) {
+      alert('⚠️ Warning: This site is potentially a phishing site!');
+    }
   }
 });

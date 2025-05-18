@@ -1,91 +1,109 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const checkBtn = document.getElementById("check-btn");
-    const resultDiv = document.getElementById("result");
-    const currentUrlP = document.getElementById("current-url");
-    const feedbackSection = document.getElementById("feedback-section");
-    const feedbackButtons = document.querySelectorAll(".feedback-btn");
-  
-    let currentUrl = "";
-    let currentRecordId = "";
-  
-    // Fetch the current tab URL
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (tabs.length > 0) {
-        currentUrl = tabs[0].url;
-        currentUrlP.textContent = currentUrl;
-      } else {
-        currentUrlP.textContent = "Unable to fetch current tab URL.";
-      }
-    });
-  
-    checkBtn.addEventListener("click", function () {
-      if (!currentUrl) return;
-  
-      // Reset result and feedback section
-      resultDiv.classList.add("d-none");
-      resultDiv.textContent = "";
-      resultDiv.className = "alert alert-secondary mt-3 d-none";
-      feedbackSection.classList.add("d-none");
-  
-      // Send URL to Flask backend
-      fetch("http://127.0.0.1:5000/predict-only", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ url: currentUrl })
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.result) {
-            const label = data.result.toLowerCase();
-            resultDiv.classList.remove("d-none");
-            resultDiv.classList.add(label === "phishing" ? "alert-danger" : "alert-success");
-            resultDiv.textContent = `The site is ${label.toUpperCase()}.`;
-  
-            // Save the record ID for feedback later
-            currentRecordId = data.id;
-  
-            // Show feedback section
-            feedbackSection.classList.remove("d-none");
-          } else if (data.error) {
-            showError(data.error);
-          }
-        })
-        .catch(err => showError("Server Error: " + err.message));
-    });
-  
-    function showError(msg) {
-      resultDiv.className = "alert alert-warning mt-3";
-      resultDiv.textContent = msg;
-      resultDiv.classList.remove("d-none");
+  const resultText = document.getElementById("result-text");
+  const feedbackButtons = document.querySelectorAll(".feedback-btn");
+  const reportBtn = document.getElementById("report-btn");
+  const showMoreBtn = document.getElementById("show-more-btn");
+
+  let currentUrl = "";
+
+  // Fetch the active tab URL when popup opens
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    if (tabs.length === 0 || !tabs[0].url) {
+      resultText.textContent = " Unable to fetch active tab URL.";
+      return;
     }
-  
-    feedbackButtons.forEach(button => {
-      button.addEventListener("click", function () {
-        const feedback = this.dataset.feedback;
-  
-        if (!currentRecordId) {
-          feedbackSection.innerHTML = `<div class="text-danger small mt-2">⚠️ Missing record ID!</div>`;
-          return;
+
+    currentUrl = tabs[0].url;
+    resultText.textContent = " Checking URL...";
+
+    fetch("http://127.0.0.1:5000/api/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: currentUrl })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
         }
-  
-        fetch(`http://127.0.0.1:5000/feedback/${currentRecordId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ feedback })
-        })
-          .then(response => response.json())
-          .then(() => {
-            feedbackSection.innerHTML = `<div class="text-success small mt-2">✅ Thanks for your feedback!</div>`;
-          })
-          .catch(err => {
-            feedbackSection.innerHTML = `<div class="text-danger small mt-2">⚠️ Failed to send feedback.</div>`;
-            console.error("Feedback error:", err);
-          });
+        return response.json();
+      })
+      .then(data => {
+        console.log(" API Response:", data); // Debugging line
+
+        if (data && data.result) {
+          const verdict = data.result.toLowerCase();
+          const confidence = data.confidence || "Unknown";
+
+          resultText.textContent = verdict === "phishing"
+            ? ` Phishing detected! (Confidence: ${confidence}%)`
+            : ` Legitimate site (Confidence: ${confidence}%)`;
+        } else {
+          resultText.textContent = " Error: Invalid response from server.";
+        }
+      })
+      .catch(error => {
+        console.error(" Prediction Error:", error);
+        resultText.textContent = " Server error while checking URL.";
       });
+  });
+
+  // Handle feedback submission
+  feedbackButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      const feedback = button.dataset.feedback;
+      if (!currentUrl) return;
+
+      fetch("http://127.0.0.1:5000/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: currentUrl, feedback })
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(() => {
+          resultText.textContent = "Feedback submitted. Thank you!";
+        })
+        .catch(err => {
+          console.error(" Feedback Error:", err);
+          resultText.textContent = " Failed to send feedback.";
+        });
     });
   });
-  
+
+  // Show More action
+  showMoreBtn.addEventListener("click", () => {
+    if (currentUrl) {
+      chrome.tabs.create({
+        url: `https://www.phishcheck.ai/info?url=${encodeURIComponent(currentUrl)}`
+      });
+    }
+  });
+
+  // Report action
+  reportBtn.addEventListener("click", () => {
+    if (currentUrl) {
+      fetch("http://127.0.0.1:5000/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: currentUrl, message: "User reported phishing." })
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(() => {
+          resultText.textContent = " Report submitted!";
+        })
+        .catch(err => {
+          console.error(" Report Error:", err);
+          resultText.textContent = " Failed to report URL.";
+        });
+    }
+  });
+});

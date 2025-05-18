@@ -1,0 +1,206 @@
+/* Global Body Styling */
+body {
+    width: 380px;
+    margin: 0 auto;
+    padding: 200px;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f6f7;
+    background-image: linear-gradient(135deg, #6e93b9, #f0f8ff);
+    animation: fadeIn 1s ease-out;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Header Styling */
+  h5 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+    animation: fadeIn 1s ease-out;
+    text-transform: uppercase;
+  }
+  
+  /* Input Group Styling */
+  .input-group {
+    margin-bottom: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .input-group label {
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .input-group input, .input-group textarea {
+    border-radius: 8px;
+    padding: 50px;
+    width: 100%;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+  }
+  
+  .input-group input:focus, .input-group textarea:focus {
+    border-color: #3a8bcb;
+    outline: none;
+  }
+  
+  /* Prediction Result Styling */
+  #resultArea {
+    background-color: #b98ec3;
+    border: 1px solid #242323;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    animation: fadeIn 1s ease-out;
+  }
+  
+  /* Safe/Unsafe Status Styling */
+  .status-safe {
+    color: #4caf50;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+  
+  .status-unsafe {
+    color: #f44336;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+  
+  /* Cool Animation for Buttons */
+  .feedback-btns button {
+    margin-right: 10px;
+    padding: 12px 25px;
+    background-color: #00796b;
+    color: #fff;
+    font-size: 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out, background-color 0.3s;
+  }
+  
+  .feedback-btns button:hover {
+    transform: scale(1.1);
+    background-color: #004d40;
+  }
+  
+  .feedback-btns button:focus {
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 184, 148, 0.7);
+  }
+  
+  /* Show More Section Styling */
+  .collapse {
+    margin-top: 15px;
+  }
+  
+  /* More Info Box */
+  #more-info {
+    background-color: #043b6b;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  #more-info p {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  /* Report Section Styling */
+  textarea {
+    font-size: 14px;
+    border-radius: 8px;
+    padding: 10px;
+    resize: vertical;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    background-color: #fff;
+  }
+  
+  /* Button Hover Animation */
+  button {
+    padding: 12px 25px;
+    background-color: #0288d1;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s ease-in-out;
+  }
+  
+  button:hover {
+    transform: scale(1.05);
+    background-color: #01579b;
+  }
+  
+  button:focus {
+    outline: none;
+    box-shadow: 0 0 8px rgba(2, 136, 209, 0.7);
+  }
+  
+  /* Animations on Load */
+  .animate__fadeIn {
+    animation: fadeIn 1s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive for Mobile View */
+  @media (max-width: 480px) {
+    body {
+      width: 100%;
+      padding: 15px;
+      box-shadow: none;
+    }
+    
+    .input-group {
+      flex-direction: column;
+      gap: 10px;
+    }
+  
+    h5 {
+      font-size: 1.3rem;
+    }
+  
+    button {
+      width: 100%;
+      font-size: 16px;
+    }
+    
+    #resultArea {
+      padding: 15px;
+    }
+  
+    .feedback-btns button {
+      width: 100%;
+      margin: 10px 0;
+    }
+  
+    textarea {
+      width: 100%;
+    }
+  }
+  
