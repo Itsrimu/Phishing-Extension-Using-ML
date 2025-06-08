@@ -27,3 +27,4 @@ yarn-error.log*
 # Cache
 .cache/
 .next/
+*.ipynb

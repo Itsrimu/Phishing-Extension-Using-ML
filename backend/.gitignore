@@ -43,3 +43,4 @@ backend/data/malicious_phish.csv
 # macOS & Windows
 .DS_Store
 Thumbs.db
+*.ipynb

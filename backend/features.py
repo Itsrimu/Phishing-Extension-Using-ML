@@ -3,15 +3,6 @@
 import re
 from urllib.parse import urlparse
 
-
-def is_ip(domain: str) -> bool:
-    return bool(re.match(r"^(?:\d{1,3}\.){3}\d{1,3}$", domain))
-
-
-def count_https_token(url: str) -> int:
-    return url.count('https')
-
-
 FEATURE_NAMES = [
     "url_length", "domain_length", "path_length", "query_length", "num_dots", "num_hyphens",
     "num_underscores", "num_slashes", "num_digits", "num_letters", "ratio_digits", "ratio_letters",
@@ -21,6 +12,11 @@ FEATURE_NAMES = [
     "domain_is_short", "is_https_and_trusted"
 ]
 
+def is_ip(domain: str) -> bool:
+    return bool(re.match(r"^(?:\d{1,3}\.){3}\d{1,3}$", domain))
+
+def count_https_token(url: str) -> int:
+    return url.count('https')
 
 def extract_url_features(url: str, skip_ssl: bool = False) -> dict:
     if not isinstance(url, str) or not url.strip():
@@ -36,7 +32,6 @@ def extract_url_features(url: str, skip_ssl: bool = False) -> dict:
         query = parsed.query
         full = f"{domain}{path}?{query}"
     except Exception as e:
-        print(f"[extract_url_features] Invalid URL format: {url} ({e})")
         # Return zeros for all features if parsing fails
         return {name: 0 for name in FEATURE_NAMES}
 
