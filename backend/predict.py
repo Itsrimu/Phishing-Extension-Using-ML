@@ -1,7 +1,7 @@
 import pickle
 import logging
 from pathlib import Path
-from feature import extract_url_features
+from features import extract_url_features  # <-- FIXED import
 
 # Enable logging for debugging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -9,9 +9,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 # Path to the saved model pipeline
 MODEL_PATH = Path("model/phishing_model1.pkl")
 
-def load_model():
+def load_model(context=None):
     """
     Load the saved machine learning model pipeline.
+    Accepts an optional argument for compatibility with Flask reload behavior.
     """
     try:
         with open(MODEL_PATH, "rb") as file:
@@ -33,7 +34,7 @@ def predict_url(url: str) -> dict:
         url (str): The URL to be analyzed.
 
     Returns:
-        dict: Contains prediction label and confidence score.
+        dict: Contains analysis result (label only).
     """
     try:
         logging.info(f" Extracting features for URL: {url}")
@@ -45,18 +46,22 @@ def predict_url(url: str) -> dict:
 
         model = load_model()
 
-        # Ensure model receives valid input format
-        model_input = {k: v for k, v in features.items() if isinstance(v, (int, float, bool))}
-
-        prediction_proba = model.predict_proba([model_input])[0]
-        prediction = model.predict([model_input])[0]
-
-        confidence = round(max(prediction_proba) * 100, 2)
+        # Pass a list of dicts to the pipeline (DictVectorizer expects this)
+        prediction = model.predict([features])[0]
         label = "Phishing" if prediction == 1 else "Legitimate"
 
-        logging.info(f" Prediction: {label} ({confidence}% confidence)")
+        # Optionally, get confidence score if available
+        confidence = None
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba([features])[0]
+            confidence = round(max(proba) * 100, 2)
 
-        return {"url": url, "verdict": label, "confidence_score": f"{confidence}%"}
+        logging.info(f" Analysis Result: {label}")
+
+        result = {"url": url, "analysis_result": label}
+        if confidence is not None:
+            result["confidence"] = f"{confidence}%"
+        return result
 
     except Exception as e:
         logging.error(f" Prediction failed for {url}: {e}")
@@ -67,7 +72,8 @@ if __name__ == "__main__":
     try:
         result = predict_url(test_url)
         print(f"\n URL Analysis Result:")
-        print(f" Confidence Score: {result['confidence_score']}")
-        print(f" Verdict: {result['verdict']}")
+        print(f" Analysis Result: {result['analysis_result']}")
+        if "confidence" in result:
+            print(f" Confidence: {result['confidence']}")
     except Exception as err:
         print(f" Error: {err}")

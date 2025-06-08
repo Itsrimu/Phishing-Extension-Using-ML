@@ -2,32 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Phishing Detector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
   <div class="container">
-    <h2> Phishing Detection</h2>
+    <h2>Phishing Detector</h2>
 
+    <!-- Auto-Detection Toggle -->
     <div class="section">
-      <button id="check-url-btn">Check URL</button>
-      <p id="result-text">checking..</p>
+      <label for="autoDetect">
+        Enable Auto-Detection
+        <input type="checkbox" id="autoDetect" aria-checked="false" />
+      </label>
     </div>
 
+    <!-- URL Check -->
     <div class="section">
-      <p>Feedback:</p>
-      <button class="feedback-btn" data-feedback="yes"> Yes</button>
-      <button class="feedback-btn" data-feedback="no"> No</button>
-      <button class="feedback-btn" data-feedback="no"> Not Sure</button>
+      <button id="check-url-btn" aria-label="Check the current URL">Check Current URL</button>
+      <div id="status-indicator" role="status" aria-live="polite">Waiting for check...</div>
     </div>
 
-    <div class="section">
-      <button id="report-btn"> Report</button>
-      <button id="show-more-btn"> Show More</button>
+    <!-- Phishing Warning -->
+    <div id="phishing-warning" class="warning hidden" role="alert" aria-live="assertive" tabindex="0">
+       ⚠️ Warning: This site may be phishing!
     </div>
 
+    <!-- Feedback Section -->
+    <div class="section feedback-grid" role="region" aria-label="Feedback section">
+      <p style="grid-column: span 3; margin: 0 0 8px 0;">Is this a phishing site?</p>
+      <button class="feedback-btn btn-success" data-feedback="yes" aria-label="Yes, it is phishing">Yes</button>
+      <button class="feedback-btn btn-danger" data-feedback="no" aria-label="No, it is not phishing">No</button>
+      <button class="feedback-btn btn-warning" data-feedback="not_sure" aria-label="Not sure">Not Sure</button>
+    </div>
 
+    <!-- Action Buttons -->
+    <div class="section buttons-grid">
+      <button id="report-btn" aria-label="Report phishing">Report Phishing</button>
+      <button id="show-more-btn" aria-label="Show more information">More Info</button>
+      <button id="open-settings-btn" style="grid-column: span 2;" aria-label="Open settings">Settings</button>
+    </div>
+  </div>
+
+  <!-- 
+   
+    - POST to http://127.0.0.1:5000/api/predict-only with {url: ...} for prediction
+    - POST to http://127.0.0.1:5000/api/feedback/report with {url: ..., reason: ...} for reporting
+    - Handle responses and update #status-indicator and #phishing-warning accordingly
+  -->
   <script src="popup.js"></script>
 </body>
 </html>

@@ -1,0 +1,143 @@
+/* General Layout */
+body {
+  width: 100%;
+  max-width: 360px;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease, opacity 0.3s ease-in-out;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+/* Dark Mode Support */
+.dark-theme {
+  background-color: #121212 !important;
+  color: #f1f1f1 !important;
+}
+
+/* Form Controls */
+.form-check-input,
+.form-range,
+input[type="text"] {
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Buttons */
+.btn {
+  width: 100%;
+  font-size: 14px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+  transform: scale(1.04);
+}
+
+/* Button Variants */
+.btn-primary {
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+}
+.btn-primary:hover {
+  background-color: #2980b9;
+}
+
+.btn-success {
+  background-color: #2ecc71;
+  color: #fff;
+  border: none;
+}
+.btn-success:hover {
+  background-color: #27ae60;
+}
+
+.btn-warning {
+  background-color: #f1c40f;
+  color: #333;
+  border: none;
+}
+.btn-warning:hover {
+  background-color: #f39c12;
+}
+
+.btn-danger {
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+}
+.btn-danger:hover {
+  background-color: #c0392b;
+}
+
+.btn-outline-secondary {
+  color: #555;
+}
+
+/* Sensitivity Display */
+#sensitivity-value {
+  font-size: 13px;
+  margin-top: 4px;
+  color: #666;
+}
+
+/* Blocklist */
+.list-group-item {
+  font-size: 14px;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #ffc107;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: #f3f3f3;
+}
+
+/* Remove Block Button */
+.remove-block {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.remove-block:hover {
+  background-color: #c0392b;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Status Message */
+.status-message {
+  text-align: center;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  color: #555;
+}

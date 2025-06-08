@@ -1,41 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Extension Settings</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <meta charset="UTF-8" />
+  <title>Phishing Detector – Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="settings.css" />
 
   <style>
     body {
-      width: 320px;
-      padding: 15px;
+      width: 100%;
+      max-width: 360px;
+      padding: 20px;
+      margin: auto;
+      background-color: #f9f9f9;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .dark-theme {
+      background-color: #121212;
+      color: #f1f1f1;
+    }
+
+    h5, h6 {
+      font-weight: 600;
+    }
+
+    .section {
+      margin-top: 24px;
+    }
+
+    .list-group-item {
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      width: 100%;
+    }
+
+    .form-range {
+      width: 100%;
     }
   </style>
 </head>
 <body>
-  <div class="container text-center">
-    <h5 class="mb-3">Extension Settings</h5>
+  <div class="container text-start">
+    <h5 class="text-center mb-4">⚙️ Extension Settings</h5>
 
-    <!-- Auto-Detection Setting -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" id="autoDetect">
+    <!-- Auto-Detection -->
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="autoDetect" />
       <label class="form-check-label" for="autoDetect">Enable Auto-Detection</label>
     </div>
 
-    <!-- Reset Settings Button -->
-    <button id="reset-settings" class="btn btn-outline-danger btn-sm mt-3">Reset Settings</button>
+    <!-- Dark Mode -->
+    <div class="form-check mb-4">
+      <input class="form-check-input" type="checkbox" id="darkMode" />
+      <label class="form-check-label" for="darkMode">Enable Dark Mode</label>
+    </div>
 
-    <!-- Back to Popup -->
-    <a href="popup.html" class="btn btn-outline-dark btn-sm mt-3">🔙 Back to Popup</a>
+    <!-- Sensitivity -->
+    <div class="section">
+      <label for="sensitivity" class="form-label">Detection Sensitivity</label>
+      <input type="range" class="form-range" id="sensitivity" min="50" max="95" step="5" aria-label="Detection sensitivity" />
+      <p id="sensitivity-value" class="text-muted small">Current: 70%</p>
+    </div>
+
+    <!-- Blocklist -->
+    <div class="section">
+      <h6>🔒 Custom Blocklist</h6>
+      <div class="input-group mb-2">
+        <input type="text" id="blocklistInput" class="form-control" placeholder="e.g. suspicious-site.com" aria-label="Blocklist domain input" />
+        <button id="add-blocklist" class="btn btn-warning" type="button">Add</button>
+      </div>
+      <ul id="blocklist" class="list-group small"></ul>
+    </div>
+
+    <!-- WHOIS API Key -->
+    <div class="section">
+      <h6>🔑 WHOIS API Key</h6>
+      <input type="text" id="apiKeyInput" class="form-control mb-2" placeholder="Enter your WHOIS API Key" aria-label="WHOIS API Key" />
+      <button id="save-api-key" class="btn btn-success mb-3">Save Key</button>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-grid gap-2">
+      <button id="reset-settings" class="btn btn-outline-danger">Reset Settings</button>
+      <a href="popup.html" class="btn btn-outline-secondary">⬅ Back to Popup</a>
+    </div>
   </div>
 
-  <!-- Bootstrap Bundle -->
-  <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Settings Logic -->
+  <!-- Custom Logic -->
   <script src="settings.js"></script>
 </body>
 </html>

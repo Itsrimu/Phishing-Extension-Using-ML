@@ -5,10 +5,15 @@
   "description": "Detect phishing websites with ease using this extension.",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "webNavigation",
+    "notifications",
+    "scripting"
   ],
   "host_permissions": [
-    "http://127.0.0.1:5000/*"
+    "http://127.0.0.1:5000/*",
+    "https://api.unshorten.me/*",
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
@@ -24,7 +29,8 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_idle"
     }
   ],
   "icons": {
@@ -34,7 +40,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["bootstrap.bundle.min.js"],
+      "resources": ["icons/*", "js/bootstrap.bundle.min.js"],
       "matches": ["<all_urls>"]
     }
   ],

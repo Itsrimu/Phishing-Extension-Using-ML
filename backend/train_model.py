@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.metrics import classification_report, accuracy_score
-from feature import extract_url_features
+from features import extract_url_features  # <-- FIXED import
 
 # Paths
 DATA_PATH = Path("data/phishing_site_urls.csv")
@@ -38,9 +38,15 @@ df = df[df['URL'].apply(is_valid_url)]
 # Feature extraction
 df['features'] = df['URL'].apply(extract_url_features)
 
-# Train/test split
+# For large datasets, sample for grid search
+SAMPLE_SIZE = 100000
+df_sample = df.sample(n=min(SAMPLE_SIZE, len(df)), random_state=42)
+X_sample = df_sample['features'].tolist()
+y_sample = df_sample['Label']
+
+# Train/test split for grid search
 X_train, X_test, y_train, y_test = train_test_split(
-    df['features'].tolist(), df['Label'], test_size=0.2, random_state=42, stratify=df['Label']
+    X_sample, y_sample, test_size=0.2, random_state=42, stratify=y_sample
 )
 
 # Define pipeline
@@ -54,14 +60,20 @@ param_grid = {
     "classifier__n_estimators": [100, 150],
     "classifier__max_depth": [None, 10, 20]
 }
-grid = GridSearchCV(pipeline, param_grid, cv=5, scoring='f1', verbose=1, n_jobs=-1)
+grid = GridSearchCV(pipeline, param_grid, cv=3, scoring='f1', verbose=1, n_jobs=1)  # n_jobs=1 for Windows stability
 grid.fit(X_train, y_train)
 
 # Evaluate
 y_pred = grid.predict(X_test)
-print("\n Best Parameters:", grid.best_params_)
-print("\n Accuracy:", accuracy_score(y_test, y_pred))
-print("\n Classification Report:\n", classification_report(y_test, y_pred))
+print("\nBest Parameters:", grid.best_params_)
+print("\nAccuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Retrain best model on full data
+print("Training best model on full dataset...")
+X_full = df['features'].tolist()
+y_full = df['Label']
+grid.best_estimator_.fit(X_full, y_full)
 
 # Save best model and vectorizer
 best_model = grid.best_estimator_
@@ -71,13 +83,13 @@ with open(MODEL_PATH, "wb") as f:
 with open(VECTORIZER_PATH, "wb") as f:
     pickle.dump(best_model.named_steps['vectorizer'], f)
 
-print(f"\n Model saved at {MODEL_PATH}")
-print(f" Vectorizer saved at {VECTORIZER_PATH}")
+print(f"\nModel saved at {MODEL_PATH}")
+print(f"Vectorizer saved at {VECTORIZER_PATH}")
 
 # Update model from feedback
 def update_model_with_feedback(new_url: str, feedback: str):
     """
-    Update the model using a new URL and feedback ('good' or 'bad'). 
+    Update the model using a new URL and feedback ('good' or 'bad').
     Retrains the model and saves updated version.
     """
     if feedback not in ["good", "bad"]:
@@ -118,8 +130,8 @@ def update_model_with_feedback(new_url: str, feedback: str):
     grid.fit(X_train, y_train)
     y_pred = grid.predict(X_test)
 
-    print("\n Updated Accuracy:", accuracy_score(y_test, y_pred))
-    print("\n Updated Classification Report:\n", classification_report(y_test, y_pred))
+    print("\nUpdated Accuracy:", accuracy_score(y_test, y_pred))
+    print("\nUpdated Classification Report:\n", classification_report(y_test, y_pred))
 
     # Save updated model and vectorizer
     updated_model = grid.best_estimator_
@@ -129,5 +141,5 @@ def update_model_with_feedback(new_url: str, feedback: str):
     with open(VECTORIZER_PATH, "wb") as f:
         pickle.dump(updated_model.named_steps['vectorizer'], f)
 
-    print(f"\n Updated model saved at {MODEL_PATH}")
-    print(f" Updated vectorizer saved at {VECTORIZER_PATH}")
+    print(f"\nUpdated model saved at {MODEL_PATH}")
+    print(f"Updated vectorizer saved at {VECTORIZER_PATH}")

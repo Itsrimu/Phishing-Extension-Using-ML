@@ -1,109 +1,135 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const resultText = document.getElementById("result-text");
+document.addEventListener("DOMContentLoaded", () => {
+  const statusIndicator = document.getElementById("status-indicator");
+  const phishingWarning = document.getElementById("phishing-warning");
   const feedbackButtons = document.querySelectorAll(".feedback-btn");
   const reportBtn = document.getElementById("report-btn");
   const showMoreBtn = document.getElementById("show-more-btn");
+  const autoDetectCheckbox = document.getElementById("autoDetect");
+  const openSettingsBtn = document.getElementById("open-settings-btn");
+  const checkUrlBtn = document.getElementById("check-url-btn");
 
+  const API_BASE_URL = "http://127.0.0.1:5000/api";
   let currentUrl = "";
 
-  // Fetch the active tab URL when popup opens
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    if (tabs.length === 0 || !tabs[0].url) {
-      resultText.textContent = " Unable to fetch active tab URL.";
-      return;
-    }
+  chrome.storage.local.get(["autoDetect"], (data) => {
+    const enabled = data.autoDetect || false;
+    autoDetectCheckbox.checked = enabled;
+    statusIndicator.textContent = `Auto-Detection ${enabled ? "Enabled" : "Disabled"}`;
+    if (enabled) fetchAndCheckActiveTab();
+  });
 
-    currentUrl = tabs[0].url;
-    resultText.textContent = " Checking URL...";
+  autoDetectCheckbox.addEventListener("change", () => {
+    const enabled = autoDetectCheckbox.checked;
+    chrome.storage.local.set({ autoDetect: enabled }, () => {
+      statusIndicator.textContent = `Auto-Detection ${enabled ? "Enabled" : "Disabled"}`;
+      if (enabled) fetchAndCheckActiveTab();
+    });
+  });
 
-    fetch("http://127.0.0.1:5000/api/predict", {
+  checkUrlBtn.addEventListener("click", () => {
+    if (!currentUrl) fetchAndCheckActiveTab();
+    else checkUrl(currentUrl);
+  });
+
+  reportBtn.addEventListener("click", () => {
+    if (!currentUrl) return;
+    fetch(`${API_BASE_URL}/feedback/report`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: currentUrl })
+      body: JSON.stringify({ url: currentUrl, reason: "User suspects phishing" }),
     })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-        return response.json();
+      .then((res) => res.json())
+      .then((data) => {
+        statusIndicator.textContent = data.status === "success"
+          ? "Phishing Report Submitted!"
+          : "Failed to report the site.";
       })
-      .then(data => {
-        console.log(" API Response:", data); // Debugging line
-
-        if (data && data.result) {
-          const verdict = data.result.toLowerCase();
-          const confidence = data.confidence || "Unknown";
-
-          resultText.textContent = verdict === "phishing"
-            ? ` Phishing detected! (Confidence: ${confidence}%)`
-            : ` Legitimate site (Confidence: ${confidence}%)`;
-        } else {
-          resultText.textContent = " Error: Invalid response from server.";
-        }
-      })
-      .catch(error => {
-        console.error(" Prediction Error:", error);
-        resultText.textContent = " Server error while checking URL.";
+      .catch(() => {
+        statusIndicator.textContent = "Failed to report the site.";
       });
   });
 
-  // Handle feedback submission
-  feedbackButtons.forEach(button => {
-    button.addEventListener("click", () => {
-      const feedback = button.dataset.feedback;
-      if (!currentUrl) return;
+  feedbackButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const feedback = btn.dataset.feedback;
+      if (!currentUrl || !feedback) return;
 
-      fetch("http://127.0.0.1:5000/api/feedback", {
+      fetch(`${API_BASE_URL}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: currentUrl, feedback })
+        body: JSON.stringify({ url: currentUrl, feedback }),
       })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-          }
-          return response.json();
+        .then((res) => res.json())
+        .then((data) => {
+          statusIndicator.textContent = data.feedback_updated
+            ? "Feedback submitted!"
+            : "Feedback submission failed.";
         })
-        .then(() => {
-          resultText.textContent = "Feedback submitted. Thank you!";
-        })
-        .catch(err => {
-          console.error(" Feedback Error:", err);
-          resultText.textContent = " Failed to send feedback.";
+        .catch(() => {
+          statusIndicator.textContent = "Feedback submission failed.";
         });
     });
   });
 
-  // Show More action
+  openSettingsBtn.addEventListener("click", () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL("settings.html") });
+  });
+
   showMoreBtn.addEventListener("click", () => {
     if (currentUrl) {
       chrome.tabs.create({
-        url: `https://www.phishcheck.ai/info?url=${encodeURIComponent(currentUrl)}`
+        url: `https://www.phishcheck.ai/info?url=${encodeURIComponent(currentUrl)}`,
       });
     }
   });
 
-  // Report action
-  reportBtn.addEventListener("click", () => {
-    if (currentUrl) {
-      fetch("http://127.0.0.1:5000/api/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: currentUrl, message: "User reported phishing." })
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
+  function fetchAndCheckActiveTab() {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs[0];
+      if (!tab || !tab.url || !/^https?:\/\//i.test(tab.url)) {
+        statusIndicator.textContent = "Invalid or unsupported tab URL.";
+        phishingWarning.classList.add("hidden");
+        currentUrl = "";
+        return;
+      }
+      currentUrl = tab.url;
+      checkUrl(currentUrl);
+    });
+  }
+
+  function checkUrl(url) {
+    statusIndicator.textContent = "Checking for phishing risks...";
+    phishingWarning.classList.add("hidden");
+
+    fetch(`${API_BASE_URL}/predict-only`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        // Accept both {verdict: "..."} and {analysis_result: "..."
+        const verdict = data.verdict || data.analysis_result;
+        if (verdict) {
+          if (verdict.toLowerCase() === "phishing") {
+            phishingWarning.classList.remove("hidden");
+            statusIndicator.textContent = "Phishing Detected!"
+              + (data.confidence ? ` (${data.confidence})` : "");
+          } else {
+            phishingWarning.classList.add("hidden");
+            statusIndicator.textContent = "Legitimate Site"
+              + (data.confidence ? ` (${data.confidence})` : "");
           }
-          return response.json();
-        })
-        .then(() => {
-          resultText.textContent = " Report submitted!";
-        })
-        .catch(err => {
-          console.error(" Report Error:", err);
-          resultText.textContent = " Failed to report URL.";
-        });
-    }
-  });
+        } else if (data.error) {
+          statusIndicator.textContent = `Error: ${data.error}`;
+        } else {
+          statusIndicator.textContent = "Unexpected server response.";
+        }
+      })
+      .catch(() => {
+        statusIndicator.textContent = "Server error while checking.";
+      });
+  }
+
+  fetchAndCheckActiveTab();
 });
