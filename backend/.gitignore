@@ -30,7 +30,6 @@ model/*.joblib
 # Data files
 
 data/*.tsv
-data/*.json
 backend/data/malicious_phish.csv
 *.csv
 
