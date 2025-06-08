@@ -31,6 +31,8 @@ model/*.joblib
 
 data/*.tsv
 data/*.json
+backend/data/malicious_phish.csv
+*.csv
 
 # Temporary files
 *.tmp
