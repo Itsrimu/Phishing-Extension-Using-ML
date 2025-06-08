@@ -1,23 +1,22 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Environment
-.env
-.venv/
-env/
+# Python virtual environments
 venv/
-ENV/
-env.bak/
 venv.bak/
+.env
+.env.*
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # Jupyter Notebook checkpoints
-.ipynb_checkpoints
+.ipynb_checkpoints/
 
 # Model files and checkpoints
-model/*.pkl
-model/*.joblib
+model/
+*.pkl
+*.joblib
 *.h5
 *.ckpt
 
@@ -26,21 +25,29 @@ model/*.joblib
 
 # Logs
 *.log
-*.exe
-# Data files
 
-data/*.tsv
-backend/data/malicious_phish.csv
+# Executables
+*.exe
+
+# Data files (especially those with secrets or sensitive info)
+data/
 *.csv
+*.tsv
+*.xlsx
+*.xls
+*.json
 
 # Temporary files
 *.tmp
 *.swp
 
-# Pytest cache
+# Test outputs and cache
 .pytest_cache/
+*.ipynb
 
-# macOS & Windows
+# OS files
 .DS_Store
 Thumbs.db
-*.ipynb
+
+# Ignore your specific secret or sensitive files
+backend/data/malicious_phish.csv
