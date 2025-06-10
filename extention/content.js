@@ -135,6 +135,94 @@
     });
   }
 
+  // Tooltip for link predictions
+  (function () {
+    let tooltip = null;
+    let lastUrl = "";
+    let verdictCache = {};
+
+    function createTooltip() {
+      tooltip = document.createElement("div");
+      tooltip.style.position = "fixed";
+      tooltip.style.zIndex = "99999";
+      tooltip.style.padding = "6px 12px";
+      tooltip.style.borderRadius = "6px";
+      tooltip.style.fontSize = "13px";
+      tooltip.style.fontWeight = "bold";
+      tooltip.style.pointerEvents = "none";
+      tooltip.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
+      tooltip.style.display = "none";
+      document.body.appendChild(tooltip);
+    }
+
+    function showTooltip(text, color, x, y) {
+      if (!tooltip) createTooltip();
+      tooltip.textContent = text;
+      tooltip.style.background = color;
+      tooltip.style.color = "#fff";
+      tooltip.style.left = x + 15 + "px";
+      tooltip.style.top = y + 15 + "px";
+      tooltip.style.display = "block";
+    }
+
+    function hideTooltip() {
+      if (tooltip) tooltip.style.display = "none";
+    }
+
+    document.addEventListener("mouseover", async (e) => {
+      const link = e.target.closest("a[href]");
+      if (!link) return hideTooltip();
+
+      const url = link.href;
+      lastUrl = url;
+
+      // If verdict is cached, use it
+      if (verdictCache[url]) {
+        showTooltip(verdictCache[url].text, verdictCache[url].color, e.clientX, e.clientY);
+        return;
+      }
+
+      showTooltip("Checking...", "#888", e.clientX, e.clientY);
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/predict-only`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        const verdict = (data.verdict || data.analysis_result || "").toLowerCase();
+        let text, color;
+        if (verdict === "phishing") {
+          text = "Unsafe (Phishing)";
+          color = "#d32f2f";
+        } else if (verdict === "legitimate") {
+          text = "Safe";
+          color = "#388e3c";
+        } else {
+          text = "Unknown";
+          color = "#888";
+        }
+        verdictCache[url] = { text, color };
+        // Only show if still hovering the same link
+        if (lastUrl === url) showTooltip(text, color, e.clientX, e.clientY);
+      } catch {
+        showTooltip("Error checking", "#888", e.clientX, e.clientY);
+      }
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (tooltip && tooltip.style.display === "block") {
+        tooltip.style.left = e.clientX + 15 + "px";
+        tooltip.style.top = e.clientY + 15 + "px";
+      }
+    });
+
+    document.addEventListener("mouseout", (e) => {
+      if (e.target.closest("a[href]")) hideTooltip();
+    });
+  })();
+
   // Run all
   await checkCurrentPage();
   // highlightLinks() is disabled due to missing backend endpoint
