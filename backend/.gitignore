@@ -51,3 +51,4 @@ Thumbs.db
 
 # Ignore your specific secret or sensitive files
 backend/data/malicious_phish.csv
+backend\data\phishing_site_urls.csv
