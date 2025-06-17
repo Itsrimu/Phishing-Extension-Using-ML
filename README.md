@@ -26,6 +26,42 @@ Users can check, report, and give feedback on suspicious sites, helping improve 
 
 ## 🏗️ Project Structure
 
+GitHub Copilot
+Certainly! Here’s a README-style section you can copy directly into your README.md, using clear Markdown formatting and highlighting your notebook-based analysis and findings:
+
+📓 **Notebook Analysis & Experiments**
+We conducted extensive experiments using Jupyter Notebooks to analyze multiple phishing datasets and evaluate different machine learning algorithms. Our workflow and findings are summarized below:
+
+🔬 ##Experiment Approaches
+1. Without Feature Engineering
+Method:
+Used raw dataset columns as direct input to machine learning models, without extracting or engineering any additional features.
+Result:
+All tested algorithms (Random Forest, Logistic Regression, SVM, etc.) performed poorly.
+Models showed low accuracy and struggled to distinguish phishing from legitimate URLs.
+2. With Feature Engineering
+Method:
+Extracted meaningful features from URLs (e.g., length, use of special characters, presence of HTTPS, number of subdomains, etc.) and used these as model input.
+Result:
+All algorithms performed significantly better.
+Random Forest achieved the highest accuracy and reliability.
+Feature-based models were much more robust and effective at phishing detection.
+🏆## Key Findings
+Feature engineering is essential for effective phishing detection using machine learning.
+Random Forest with engineered features provided the best results in our experiments.
+Models trained without feature extraction were much less accurate and not suitable for real-world use.
+📁 ##How to Reproduce
+Open the Jupyter Notebooks in the backend directory (e.g., phishing_analysis.ipynb).
+Follow the step-by-step workflow for:
+Data exploration
+Feature extraction
+Model training and evaluation
+You can use your own datasets by following the same process.
+🔗 ##Example Notebook
+See backend/phishing_analysis.ipynb for the full experimental workflow and results.
+
+**These experiments guided our decision to use feature-based Random Forest models in the extension backend for the most accurate phishing detection.**
+
 ```
 browserExtention/
 │
@@ -122,7 +158,7 @@ cd Phishing-Extension-Using-ML
 ## 📝 API Endpoints (Backend)
 
 - `POST /api/predict-only`  
-  `{ "url": "https://..." }` → `{ "analysis_result": "Phishing"|"Legitimate", "confidence": "..." }`
+  `{ "url": "https://..." }` → `{ "analysis_result": "Phishing"|"Legitimate", "confidence": "...%" }`
 - `POST /api/feedback`  
   `{ "url": "...", "feedback": "yes|no|not_sure" }`
 - `POST /api/feedback/report`  
@@ -147,19 +183,10 @@ cd Phishing-Extension-Using-ML
 
 ---
 
-## 🙋 FAQ
-
-**Q: Why can’t I push to GitHub?**  
-A: If you ever committed secrets, you must remove them from your git history (see [GitHub’s guide](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository)).
-
-**Q: How do I retrain the model?**  
-A: Place new data in `backend/data/`, run `train_model.py`, and restart the backend.
-
----
 
 ## ⭐ Credits
 
-- KHAIRUN NESSA NAZMIN
+KHAIRUN NESSA NAZMIN
 
 
 ---
