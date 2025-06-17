@@ -26,10 +26,8 @@ Users can check, report, and give feedback on suspicious sites, helping improve 
 
 ## 🏗️ Project Structure
 
-GitHub Copilot
-Certainly! Here’s a README-style section you can copy directly into your README.md, using clear Markdown formatting and highlighting your notebook-based analysis and findings:
-
 📓 **Notebook Analysis & Experiments**
+
 We conducted extensive experiments using Jupyter Notebooks to analyze multiple phishing datasets and evaluate different machine learning algorithms. Our workflow and findings are summarized below:
 ---
 ### 🔬 Experiment Approaches
@@ -38,7 +36,7 @@ Method:
 Used raw dataset columns as direct input to machine learning models, without extracting or engineering any additional features.
 Result:
 All tested algorithms (Random Forest, Logistic Regression, SVM, etc.) performed poorly.
-Models showed low accuracy and struggled to distinguish phishing from legitimate URLs.
+Models showed high accuracy but struggled to distinguish phishing from legitimate URLs.
 2. With Feature Engineering
 Method:
 Extracted meaningful features from URLs (e.g., length, use of special characters, presence of HTTPS, number of subdomains, etc.) and used these as model input.
