@@ -159,8 +159,8 @@ A: Place new data in `backend/data/`, run `train_model.py`, and restart the back
 
 ## ⭐ Credits
 
-- [Your Name or Team]
-- [Any open-source libraries or datasets used]
+- KHAIRUN NESSA NAZMIN
+
 
 ---
 
