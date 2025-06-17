@@ -223,6 +223,27 @@
     });
   })();
 
+  let autoDetectEnabled = false;
+
+  // Listen for changes to autoDetect setting
+  chrome.storage.local.get(["autoDetect"], (data) => {
+    autoDetectEnabled = !!data.autoDetect;
+    if (autoDetectEnabled) {
+      checkCurrentPage(); // or whatever auto-detection should do
+    }
+  });
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.autoDetect) {
+      autoDetectEnabled = changes.autoDetect.newValue;
+      if (autoDetectEnabled) {
+        checkCurrentPage();
+      } else {
+        // Optionally, remove banners/tooltips if disabling
+      }
+    }
+  });
+
   // Run all
   await checkCurrentPage();
   // highlightLinks() is disabled due to missing backend endpoint
