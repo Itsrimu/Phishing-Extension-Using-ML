@@ -31,7 +31,7 @@ Certainly! Here’s a README-style section you can copy directly into your READM
 
 📓 **Notebook Analysis & Experiments**
 We conducted extensive experiments using Jupyter Notebooks to analyze multiple phishing datasets and evaluate different machine learning algorithms. Our workflow and findings are summarized below:
-```
+---
 ### 🔬 Experiment Approaches
 1. Without Feature Engineering
 Method:
@@ -46,7 +46,7 @@ Result:
 All algorithms performed significantly better.
 Random Forest achieved the highest accuracy and reliability.
 Feature-based models were much more robust and effective at phishing detection.
-```
+---
 ### 🏆Key Findings
 Feature engineering is essential for effective phishing detection using machine learning.
 Random Forest with engineered features provided the best results in our experiments.
