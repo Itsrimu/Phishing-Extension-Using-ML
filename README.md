@@ -32,7 +32,7 @@ Certainly! Here’s a README-style section you can copy directly into your READM
 📓 **Notebook Analysis & Experiments**
 We conducted extensive experiments using Jupyter Notebooks to analyze multiple phishing datasets and evaluate different machine learning algorithms. Our workflow and findings are summarized below:
 
-🔬 ##Experiment Approaches
+###🔬 Experiment Approaches
 1. Without Feature Engineering
 Method:
 Used raw dataset columns as direct input to machine learning models, without extracting or engineering any additional features.
@@ -46,17 +46,20 @@ Result:
 All algorithms performed significantly better.
 Random Forest achieved the highest accuracy and reliability.
 Feature-based models were much more robust and effective at phishing detection.
-🏆## Key Findings
+
+###🏆Key Findings
 Feature engineering is essential for effective phishing detection using machine learning.
 Random Forest with engineered features provided the best results in our experiments.
 Models trained without feature extraction were much less accurate and not suitable for real-world use.
-📁 ##How to Reproduce
+
+###📁 How to Reproduce
 Open the Jupyter Notebooks in the backend directory (e.g., phishing_analysis.ipynb).
 Follow the step-by-step workflow for:
 Data exploration
 Feature extraction
 Model training and evaluation
 You can use your own datasets by following the same process.
+
 🔗 ##Example Notebook
 See backend/phishing_analysis.ipynb for the full experimental workflow and results.
 
