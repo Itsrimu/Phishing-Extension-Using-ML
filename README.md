@@ -169,27 +169,12 @@ cd Phishing-Extension-Using-ML
 
 ---
 
-## 🧩 Contributing
 
-1. Fork the repo and create your branch.
-2. Make your changes.
-3. Ensure you **do not commit secrets or large data files**.
-4. Submit a pull request!
-
----
 
 ## 📄 License
 
 [MIT License](LICENSE)
 
----
 
-
-## ⭐ Credits
-
-KHAIRUN NESSA NAZMIN
-
-
----
 
 **Enjoy safer browsing!**
