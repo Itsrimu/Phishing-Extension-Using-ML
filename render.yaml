@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: phishing-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app
+    envVars:
+      - key: MONGO_URI
+        value: <your-mongo-uri>
+      - key: DB_NAME
+        value: <your-db-name>
+    plan: free
+    rootDir: backend
