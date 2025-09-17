@@ -1,4 +1,6 @@
 flask
+flask-cors
+pymongo
 scikit-learn
 pandas
 nltk
@@ -7,3 +9,6 @@ seaborn
 numpy
 wordcloud
 networkx
+gunicorn
+python-dotenv
+requests
